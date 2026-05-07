@@ -673,6 +673,14 @@ main {
   background: #f7fbf8;
 }
 
+.empty-state {
+  border: 1px dashed #cad0cb;
+  border-radius: 7px;
+  background: #f7f8f5;
+  color: #52605c;
+  padding: 14px;
+}
+
 td button {
   min-height: 34px;
   padding: 0 10px;

@@ -30,6 +30,7 @@ import {
   getInitialRoute,
   loadAdminSession,
   loadAppModel,
+  normalizeAppModel,
   persistAdminSession,
   persistAppModel,
   updateRouteHash,
@@ -39,7 +40,7 @@ function App() {
   const [adminSession, setAdminSession] = useState(() => loadAdminSession());
   const [appModel, setAppModel] = useState(() => {
     const savedAdminSession = loadAdminSession();
-    return { ...loadAppModel(savedAdminSession?.studio.id), route: getInitialRoute() };
+    return normalizeAppModel({ ...loadAppModel(savedAdminSession?.studio.id), route: getInitialRoute() });
   });
   const [adminStatus, setAdminStatus] = useState('');
   const [googleReady, setGoogleReady] = useState(false);
@@ -64,7 +65,7 @@ function App() {
     vouchers,
   } = appModel;
 
-  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0];
+  const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0] ?? null;
   const editingClient = clients.find((client) => client.id === editingClientId);
   const editingVoucher = vouchers.find((voucher) => voucher.id === editingVoucherId);
   const isBackofficeRoute = route.startsWith('backoffice/');
@@ -237,7 +238,7 @@ function App() {
 
   function bookUserAppointment(event) {
     event.preventDefault();
-    if (!bookingSlot) return;
+    if (!bookingSlot || !selectedClient) return;
     if (isPastDateTime(bookingSlot.date, bookingSlot.time)) {
       updateAppModel({ bookingSlot: null, notice: 'Non e possibile prenotare slot nel passato.' });
       return;
@@ -374,6 +375,7 @@ function App() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const subscription = subscriptions.find((item) => item.id === data.get('subscriptionId'));
+    if (!selectedClient || !subscription) return;
     const discount = Number(data.get('discount') || 0);
     const discountRate = Number(data.get('discountRate') || 0);
     const includedTreatments = Number(data.get('includedTreatments') || 0);
@@ -406,6 +408,7 @@ function App() {
   function createVoucher(event) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    if (!selectedClient) return;
     const voucher = {
       id: makeId('VCH'),
       buyerId: selectedClientId,
@@ -521,8 +524,8 @@ function App() {
         password: String(data.get('adminPassword')),
       });
       const studioAppModel = session.appModel
-        ? { ...defaultAppModel, ...session.appModel, studio: session.studio }
-        : { ...defaultAppModel, ...loadAppModel(session.studio.id), studio: session.studio };
+        ? normalizeAppModel({ ...defaultAppModel, ...session.appModel, studio: session.studio })
+        : normalizeAppModel({ ...defaultAppModel, studio: session.studio });
 
       setAdminSession({
         token: session.token,

@@ -152,21 +152,27 @@ function BackOffice({
               <div className="section-heading">
                 <div>
                   <p className="eyebrow">Cliente selezionato</p>
-                  <h2>{selectedClient.name} {selectedClient.surname}</h2>
+                  <h2>{selectedClient ? `${selectedClient.name} ${selectedClient.surname}` : 'Nessun cliente'}</h2>
                 </div>
-                <select value={selectedClientId} onChange={(event) => updateAppModel({ selectedClientId: event.target.value })}>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>{client.surname} {client.name}</option>
-                  ))}
-                </select>
+                {clients.length > 0 && (
+                  <select value={selectedClientId} onChange={(event) => updateAppModel({ selectedClientId: event.target.value })}>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>{client.surname} {client.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
-              <div className="client-summary">
-                <Metric title="Codice univoco" value={selectedClient.id} />
-                <Metric title="Abbonamento" value={selectedClient.subscription.name} extra={`${selectedClient.subscription.remaining} massaggi residui`} />
-                <Metric title="Prepagata" value={currency(selectedClient.prepaid.balance)} extra={`Valida fino a ${selectedClient.prepaid.validUntil}`} />
-                <Metric title="Voucher acquistati" value={selectedClient.vouchersBought} />
-                <Metric title="Fisiopatologie" value={selectedClient.pathologies} extra={`${selectedClient.photos} foto caricate`} />
-              </div>
+              {selectedClient ? (
+                <div className="client-summary">
+                  <Metric title="Codice univoco" value={selectedClient.id} />
+                  <Metric title="Abbonamento" value={selectedClient.subscription.name} extra={`${selectedClient.subscription.remaining} massaggi residui`} />
+                  <Metric title="Prepagata" value={currency(selectedClient.prepaid.balance)} extra={`Valida fino a ${selectedClient.prepaid.validUntil}`} />
+                  <Metric title="Voucher acquistati" value={selectedClient.vouchersBought} />
+                  <Metric title="Fisiopatologie" value={selectedClient.pathologies} extra={`${selectedClient.photos} foto caricate`} />
+                </div>
+              ) : (
+                <p className="empty-state">Crea una nuova anagrafica dalla sezione Clienti.</p>
+              )}
             </section>
 
             <section className="wide panel flow-board">
@@ -327,7 +333,11 @@ function BackOffice({
           <section className="split">
             <div className="panel">
               <h2>Incasso in studio</h2>
-              <PaymentForm selectedClient={selectedClient} onSubscription={sellSubscription} onWallet={topUpWallet} />
+              {selectedClient ? (
+                <PaymentForm selectedClient={selectedClient} onSubscription={sellSubscription} onWallet={topUpWallet} />
+              ) : (
+                <p className="empty-state">Crea o seleziona un cliente prima di registrare pagamenti.</p>
+              )}
             </div>
             <div className="panel">
               <h2>Prodotti e righe conto</h2>

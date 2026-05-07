@@ -10,7 +10,10 @@ const port = Number(process.env.PORT || 3001);
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeSecretKey ? stripeClient(stripeSecretKey) : null;
 const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
-const dataPath = process.env.MARCY_DATA_PATH || path.join(__dirname, 'data', 'studios.json');
+const configuredDataPath = process.env.MARCY_DATA_PATH || path.join(__dirname, 'data', 'studios.json');
+const dataPath = path.isAbsolute(configuredDataPath)
+  ? configuredDataPath
+  : path.resolve(__dirname, '..', configuredDataPath);
 const sessions = new Map();
 
 function readStudioStore() {
@@ -143,11 +146,16 @@ app.put('/api/studios/:studioId/state', requireAdminSession, (req, res) => {
     return;
   }
 
-  savePersistedStudioState(req.params.studioId, {
-    ...req.body.appModel,
-    studio: req.adminSession.studio,
-  });
-  res.send({ status: 'saved' });
+  try {
+    savePersistedStudioState(req.params.studioId, {
+      ...req.body.appModel,
+      studio: req.adminSession.studio,
+    });
+    res.send({ status: 'saved' });
+  } catch (error) {
+    console.error(`Errore salvataggio stato studio ${req.params.studioId}:`, error);
+    res.status(500).send({ error: `Salvataggio stato studio non riuscito: ${error.message}` });
+  }
 });
 
 app.post('/create-payment-intent', async (req, res) => {
