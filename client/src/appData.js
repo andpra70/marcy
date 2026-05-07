@@ -26,8 +26,10 @@ export const backofficeNavItems = [
   { id: 'backoffice/dashboard', section: 'dashboard', label: 'Dashboard' },
   { id: 'backoffice/calendar', section: 'calendar', label: 'Calendario' },
   { id: 'backoffice/clients', section: 'clients', label: 'Clienti' },
+  { id: 'backoffice/treatments', section: 'treatments', label: 'Trattamenti' },
   { id: 'backoffice/payments', section: 'payments', label: 'Pagamenti' },
   { id: 'backoffice/voucher', section: 'voucher', label: 'Voucher' },
+  { id: 'backoffice/messages', section: 'messages', label: 'Messaggi' },
   { id: 'backoffice/reports', section: 'reports', label: 'Export' },
 ];
 
@@ -47,6 +49,33 @@ export const products = [
   { id: 'cream', type: 'Prodotto', code: 'CRM-SPORT', name: 'Crema defaticante', cost: 12, price: 28 },
   { id: 'band', type: 'Prodotto', code: 'ELB-01', name: 'Elastico terapeutico', cost: 8, price: 18 },
   { id: 'gift1', type: 'Voucher', code: 'GFT-001', name: 'Voucher gift 1 massaggio', cost: 0, price: 50 },
+];
+
+export const initialMessages = [
+  {
+    id: 'MSG-REMINDER',
+    title: 'Reminder appuntamento',
+    channel: 'Email + WhatsApp',
+    trigger: '48 ore prima',
+    text: 'Promemoria appuntamento con link modifica/disdetta e cancellation policy.',
+    enabled: true,
+  },
+  {
+    id: 'MSG-LAST-SUBSCRIPTION',
+    title: 'Ultimo trattamento abbonamento',
+    channel: 'Email',
+    trigger: 'Invio immediato e recall',
+    text: 'Avviso ultimo trattamento in abbonamento e proposta rinnovo.',
+    enabled: true,
+  },
+  {
+    id: 'MSG-RENEWAL-OFFER',
+    title: 'Offerta rinnovo',
+    channel: 'Email',
+    trigger: 'Fine abbonamento',
+    text: 'Buono regalo 10% su prepagata per rinnovo entro la data configurata.',
+    enabled: true,
+  },
 ];
 
 export const workflowSteps = [

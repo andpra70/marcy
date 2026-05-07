@@ -4,9 +4,7 @@
 
 App
 
-##
-
-Gestione massoterapia
+## Gestione massoterapia
 
 L'applicazione deve gestire un piccolo studio di massoterapia.
 
@@ -14,17 +12,107 @@ Pagina di onboarding google.
 Utente si logga su google e viene registrato sull'app nell'anagrafica clienti.
 Gestione calendario
 
-## Modello
+## Modello applicazione
 
+Gestione di n studi di massoterapia
 Uno studio ha un amministratore
-Uno studio ha n clienti
-Uno studio ha una configurazione operativa propria
-Uno studio ha uno stato applicativo proprio, ripristinato dal backend dopo il login amministratore
+Uno studio ha n trattamenti possibili con listino e durata 30-60 min.
 Uno studio ha un calendario appuntamenti composto da slot di 30 o 60 minuti.
-Un cliente puo`prenotare un appuntamento sullo studio.
-Quello slot poi sara`occupato.
-Un cliente puo`pagare in studio o online.
+Uno studio ha n clienti che possono fissare appuntamenti sugli slot disponibili nello studio.
+
+## GPDR
+
+Aggiungi gestione cookies e trattamento dati conforme normativa.
+
+
+## login
+
+login logout google | username + password scelti alla registrazione.
+
+
+## Area Utente studio
+
+Un utente accede allo studio {host}/{studio}/area-utente/...
+
+Un cliente si registra in autonomia [registrati] o via google, in tal caso deve completare il profilo sullo studio.
+Un cliente puo`fare onboarding in autonomia mediante login google viene aggiunto ai clienti di Quello studio.
+Un cliente loggato vede l'area personale.
+L'area personale del cliente mostra riepilogo, calendario, trattamenti effettuati e futuri, messaggi, profilo.
+Un cliente puo`editare il proprio profilo coi suoi dati.
+Un cliente puo`pagare un trattamento in studio o online o comprare un voucher o abbonamento di X trattamenti prepagati.
+Il cliente nella navbar vede il sezioni riepilogo , calendario, trattamenti eseguiti, messaggi, profilo.
+Un cliente puo`prenotare un appuntamento per un trattamento sullo studio.
+Quello slot poi sara`occupato per lo studio.
+Un cliente puo`richiedere un appuntamento o richiedere annullamento di un appuntamento richiesto o confermato.
+
+## Backoffice studio
+
+Un admin accede al Backoffice studio {host}/{studio}/backoffice/...
+
+Il backoffice ha sezione separata e amministratore.
 Un amministratore ha un backoffice per la gestione dello studio.
 Il backoffice ha le sezioni: dashboard, clienti, trattamenti, calendario, pagamenti, messaggi.
-La sezione trattamenti consente edit aggiunta e rimozione dei trattamenti o prodotti.
-Un cliente 
+La sezione dashboard mostra un report di tutto lo stato dello studio (clienti, trattamenti, totali settimanale e mensile)
+La sezione trattamenti consente master detail (lista, edit,aggiunta,rimozione) dei trattamenti o prodotti.
+La sezione clienti consente master detail (lista, edit,aggiunta,rimozione) dei clienti.
+La sezione calendario mostra una settimana alla volta, a partire dalla corrente, e puo navigare << e >> giorno,settimana,mese,anno e gli appuntamenti fissati per la settimana.
+La sezione calendario consente chiusura di gruppo di date orari o slot (rettangolo).
+Gli appuntamenti hanno uno stato (RICHIESTA|RICHIESTA_ANNULLAMENTO|CONFERMATO|ANNULLATO|CANCELLATO|EROGATO_PAGATO|EROGATO_NON_PAGATO) e per ogni stato usa un colore differente.
+Admin dello studio puo`confermare appuntamento o confermare annullamento sul calendario.
+Una richiesta appuntamento fatta a X giorni avanti viene confermato in automatico.
+Una richiesta annullamento fatta X giorni prima viene confermato annullamento per lo slot.
+
+## Root
+
+utente superadmin = root accede al Backoffice studio {host}/root/...
+Ha login super user. (user:root,pwd:password)
+Root admin puo`creare studi e abilitarli/disabilitarli.
+Uno studio ha un abbonamento che dura 1 anno.
+L'abbonamento e`rinnovabile dal backoffice studio con selfcare via stripe item=abbonamento, importo=PRICE (default=50Eur anno).
+
+## UI e componenti
+
+Lo studio e`il primo componente del context.
+{host}/{studio}/*
+
+La UI e` divisa in panel 
+HEADER (logo studio, indirizzo, contatti)
+NAVBAR
+CONTENT
+FOOTER (indirizzo, contatti)
+La route cambia content in base a scelta su navbar.
+
+Le sezioni rispecchiano le sezioni descritte nel modello di BL.
+
+## componente calendario
+
+E`condiviso tra back e frontoffice.
+Mostra vista settimana con slot per orari.
+Consente navigazione nel tempo (giono,settimana,mese avanti e indietro)
+Non consente di cambiare il passato.
+Consente di poter editare il futuro (max MAX_MESI = 2).
+USER: consente aggiunta ed edit (cambio stato) degli appuntamenti.
+    aggiunta=richiedi prenota
+    annulla=annulla prenota
+ADMIN: consente aggiunta periodi chiusura studio.
+ADMIN: conferma prenotazioni e annullamenti richiesti
+        conferma erogato pagato o erogato non pagato
+
+
+## Persistenza
+
+Persistenza lato server basata su n-files json, uno per studio con tutto lo stato dello studio.
+Gestisci correttamente accessi concorrenti sulle scritture dello studio.
+
+
+## pagamenti
+ 
+Integrati con stripe.
+Implementa server e client per i pagamenti da area utente
+(acquisto voucher, pagamento trattamento dalla lista trattamenti)
+
+Implementa server e client per i pagamenti da area backoffice per abbonamento
+(acquisto abbonamento un anno)
+
+
+

@@ -58,12 +58,12 @@ export function weekDays(anchorDate) {
   });
 }
 
-export function findService(serviceId) {
-  return services.find((service) => service.id === serviceId);
+export function findService(serviceId, serviceList = services) {
+  return serviceList.find((service) => service.id === serviceId) ?? services.find((service) => service.id === serviceId);
 }
 
-export function appointmentRevenue(appointments) {
-  return appointments.reduce((sum, appointment) => sum + (findService(appointment.serviceId)?.price ?? 0), 0);
+export function appointmentRevenue(appointments, serviceList = services) {
+  return appointments.reduce((sum, appointment) => sum + (findService(appointment.serviceId, serviceList)?.price ?? 0), 0);
 }
 
 export function buildClientFromForm(formData) {

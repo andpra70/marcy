@@ -14,6 +14,7 @@ function CalendarGrid({
   onPushGoogle,
   onSlotSelect,
   readOnly = false,
+  services,
   userMode = false,
 }) {
   const [anchorDate, setAnchorDate] = useState(today);
@@ -72,6 +73,7 @@ function CalendarGrid({
               onSlotSelect={onSlotSelect}
               currentClientId={currentClientId}
               readOnly={readOnly}
+              services={services}
               slot={slot}
               userMode={userMode}
               calendarDays={calendarDays}
@@ -94,6 +96,7 @@ function CalendarRow({
   onPushGoogle,
   onSlotSelect,
   readOnly,
+  services,
   userMode,
   calendarDays,
 }) {
@@ -142,7 +145,7 @@ function CalendarRow({
             )}
             {currentClientAppointments.map((appointment) => {
               const client = clients.find((item) => item.id === appointment.clientId);
-              const service = findService(appointment.serviceId);
+              const service = findService(appointment.serviceId, services);
               const isPastAppointment = isPastDateTime(appointment.date, appointment.time);
               return (
                 <article className={`slot-card ${appointmentStatusClass(appointment.status)}`} key={appointment.id}>

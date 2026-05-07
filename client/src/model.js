@@ -1,4 +1,11 @@
-import { initialAppointments, initialClients, initialVouchers } from './appData.js';
+import {
+  initialAppointments,
+  initialClients,
+  initialMessages,
+  initialVouchers,
+  products,
+  services,
+} from './appData.js';
 
 const storageKey = 'marcy.appModel.v1';
 const adminSessionStorageKey = 'marcy.adminSession.v1';
@@ -9,6 +16,15 @@ export const defaultStudio = {
   adminEmail: 'admin@marcy.local',
   calendarId: 'primary',
   timezone: 'Europe/Rome',
+  address: 'Via dello Studio 1, Milano',
+  phone: '+39 333 000 0000',
+  email: 'info@marcy.local',
+  enabled: true,
+  subscription: {
+    status: 'active',
+    validUntil: '2027-05-07',
+    yearlyPrice: 50,
+  },
 };
 
 export const defaultAppModel = {
@@ -17,6 +33,9 @@ export const defaultAppModel = {
   clients: initialClients,
   appointments: initialAppointments,
   vouchers: initialVouchers,
+  services,
+  products,
+  messages: initialMessages,
   selectedClientId: initialClients[0].id,
   editingClientId: null,
   editingVoucherId: null,
@@ -24,6 +43,7 @@ export const defaultAppModel = {
   selectedUserAppointmentId: null,
   notice: 'Promemoria standard attivi: email + WhatsApp con link modifica/disdetta e cancellation policy.',
   googleEvents: [],
+  cookieConsent: null,
 };
 
 export function normalizeAppModel(appModel) {
@@ -37,6 +57,9 @@ export function normalizeAppModel(appModel) {
     clients,
     appointments: Array.isArray(appModel?.appointments) ? appModel.appointments : defaultAppModel.appointments,
     vouchers: Array.isArray(appModel?.vouchers) ? appModel.vouchers : defaultAppModel.vouchers,
+    services: Array.isArray(appModel?.services) ? appModel.services : defaultAppModel.services,
+    products: Array.isArray(appModel?.products) ? appModel.products : defaultAppModel.products,
+    messages: Array.isArray(appModel?.messages) ? appModel.messages : defaultAppModel.messages,
     selectedClientId: selectedClientExists ? appModel.selectedClientId : (clients[0]?.id ?? ''),
     editingClientId: clients.some((client) => client.id === appModel?.editingClientId) ? appModel.editingClientId : null,
   };

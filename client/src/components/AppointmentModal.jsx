@@ -1,4 +1,4 @@
-import { services } from '../appData.js';
+import { services as defaultServices } from '../appData.js';
 import { currency, isPastDateTime } from '../domain.js';
 
 function AppointmentModal({
@@ -11,6 +11,7 @@ function AppointmentModal({
   onClose,
   onDelete,
   onSubmit,
+  services = defaultServices,
   slot,
 }) {
   const isCreate = mode === 'create';
