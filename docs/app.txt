@@ -1,0 +1,19 @@
+
+
+##
+
+App
+
+##
+
+Gestione massoterapia
+
+L'applicazione deve gestire un piccolo studio di massoterapia.
+
+Pagina di onboarding google.
+Utente si logga su google e viene registrato sull'app nell'anagrafica clienti.
+Gestione calendario
+
+##
+
+

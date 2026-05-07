@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+.git
+.agents
+.codex
+.env
+*.log
+Dockerfile
+docker-compose.yml

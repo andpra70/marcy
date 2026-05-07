@@ -1,0 +1,14 @@
+services:
+  marcy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docker.io/andpra70/marcy:${TAG:-latest}
+    container_name: marcy-app
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}

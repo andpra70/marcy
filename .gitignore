@@ -1,0 +1,11 @@
+.codex
+.agents
+.cache
+node_modules
+dist
+build
+*.log
+*.tmp
+*.env
+.DS_Store
+.idea

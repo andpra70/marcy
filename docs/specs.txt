@@ -1,0 +1,134 @@
+
+
+RICHIESTA NUOVO APPUNTAMENTO PER TELEFONO O WHATSAPP
+
+CASO UTENTE SCONOSCIUTO (NUOVO)
+Vengono date le necessarie informazioni e viene inviato un link da cui registrarsi
+
+l’utente inserisce nome, cognome, codice fiscale, indirizzo, cellulare, email
+l’utente crea una password, lo username è la email
+viene generato un codice univoco utente e si crea anagrafica
+viene inviato un messaggio email per conferma email
+l’utente accede alla pagina dove trova anche il calendario (PAGINA TOP)
+vengono visualizzati eventuali tariffe agevolate, abbonamenti in corso (con numero massaggi residuo), digital wallet con credito residuo
+possibilità di inserire codice univoco voucher gift (oltre al QR code)
+viene inviato un messaggio email e whatsapp standard con reminder appuntamento + link per modificare app o disdirlo e le cancellation policy
+CASO UTENTE CONOSCIUTO
+viene indirizzato al calendario caso 1E)
+CASO UTENTE SCONOSCIUTO CON VOUCHER GIFT (QR CODE)
+l’utente accederà alla pagina calendario (in questo creazione username e password di default)
+flusso 1E)
+CASO DI MODIFICA/CANCELLAZIONE APPUNTAMENTO
+
+MODIFICA
+l’utente ha facoltà di modificare data e orario appuntamento entro le 8 ore antecedenti altrimenti viene trattenuto il 50% dell’importo al massaggio successivo
+5. CANCELLAZIONE
+
+l’utente ha facoltà di cancellare l’appuntamento entro le 24 ore dalla data fissata. Altresì verrà conteggiato l’intero importo:
+nel caso di utente con abbonamento viene detratto il massaggio dall’abbonamento
+nel caso di utente con digital wallet viene decurtato l’importo del massaggio
+nel caso di utente senza nulla, viene creato un importo da pagare e mandato un messaggio (mezzo email) a me.
+CREAZIONE ABBONAMENTO
+
+6. CASO PRIMO MASSAGGIO CON CREAZIONE CONTESTUALE
+
+Se l’utente ha terminato l’abbonamento, in fase di prenotazione, il sistema lo segnala e propone:
+pagamento contestuale abbonamento (online)
+pagamento in studio ed invio di un messaggio a parte (oltre al reminder).
+Flusso 9)
+7. CASO CREAZIONE DOPO PIU’ APPUNTAMENTI
+
+Se l’utente ha terminato l’abbonamento, in fase di prenotazione, il sistema lo segnala e propone:
+pagamento contestuale abbonamento (online)
+pagamento in studio ed invio di un messaggio a parte (oltre al reminder).
+Flusso 10)
+PAGAMENTO IN STUDIO
+
+8. PAGAMENTO SINGOLO MASSAGGIO
+
+L’operatore selezionata la slot dell’appuntamento
+Compare la possibilità di aggiungere al conto anche prodotti inseriti in anagrafica a parte oppure un voucher gift
+L’operatore mette stato = pagato e metodo pagamento (cc, bonifico, contanti)
+9. PAGAMENTO ABBONAMENTO AL PRIMO APPUNTAMENTO
+
+L’operatore selezionata la slot dell’appuntamento
+Compare la possibilità di aggiungere al conto anche prodotti inseriti in anagrafica a parte oppure un voucher gift
+L’operatore seleziona un abbonamento da anagrafica e lo associa all’utente (in questo caso la decurtazione del massaggio dall’abbonamento è automatica)
+Possibilità di inserire uno sconto sia in % che in valore assoluto
+L’operatore mette stato = pagato e metodo pagamento (cc, bonifico, contanti)
+10. PAGAMENTO ABBONAMENTO DOPO PIU’ APPUNTAMENTI
+
+L’operatore seleziona le slot degli appuntamenti da pagare
+Compare la possibilità di aggiungere al conto anche prodotti inseriti in anagrafica a parte oppure un voucher gift
+L’operatore seleziona un abbonamento da anagrafica e lo associa all’utente (in questo caso la decurtazione dei massaggi eseguiti è automatica)
+Possibilità di inserire uno sconto sia in % che in valore assoluto
+L’operatore mette stato = pagato e metodo pagamento (cc, bonifico, contanti)
+11. PAGAMENTO PARZIALE ABBONAMENTO AL PRIMO APPUNTAMENTO (A TENDERE VERRA’ ELIMINATO)
+
+L’operatore selezionata la slot dell’appuntamento
+Compare la possibilità di aggiungere al conto anche prodotti inseriti in anagrafica a parte oppure un voucher gift
+L’operatore seleziona un abbonamento da anagrafica e lo associa all’utente
+Possibilità di inserire uno sconto sia in % che in valore assoluto
+L’operatore mette stato = pagato parzialmente ed inserisce la cifra e metodo pagamento (cc, bonifico, contanti)
+Il giorno prima dell’ultimo massaggio viene inviato una email all’operatore in cui gli si ricorda che il giorno dopo quel cliente deve pagare.
+L’operatore ha quindi facoltà di inviare un messaggio automatico all’utente con il reminder del pagamento.
+CREAZIONE VOUCHER GIFT
+
+12. UTENTE SCONOSCIUTO (CONTATTO VIA WHATSAPP O TELEFONO)
+
+flusso 1A) fino a 1D)
+in PAGINA TOP l’utente trova possibilità di acquistare un voucher
+PAGINA VOUCHER: inserisce nome, cognome, email e cell della persona a cui vuole fare il regalo.
+l’utente paga il voucher
+viene generato un QR code che viene inviato (con messaggio std via whatsapp e email) all’utente destinatario. All’interno del messaggio l’utente troverà le istruzioni per prenotare il massaggio flusso 3C).
+13. UTENTE CONOSCIUTO (CONTATTO VIA WHATSAPP O TELEFONO)
+
+da flusso 1E)
+CREAZIONE VOUCHER GIFT IN STUDIO
+
+l’operatore apre anagrafica cliente e seleziona acquista voucher
+l'operatore seleziona quanti massaggi vuole inserire nel voucher
+l’operatore inserisce nome, cognome, email e telefono del titolare del voucher
+l’operatore chiude mettendo le righe di ordine in stato pagato
+un messaggio automatico (email e whatsapp) viene inviato al cliente (eseguita creazione voucher di n massaggi con copia QR code)
+un messaggio automatico (email e whatsapp) inviato al titolare del voucher. Questa funzionalità può essere anche disabilitata a mano (flag)
+CREAZIONE DIGITAL WALLET COVERFLEX (SOLO STUDIO)
+
+14. SOLO CON PAGAMENTO NEXI
+
+l’operatore apre nuova anagrafica ed inserisce nome, cognome, email, tel, codice fiscale e indirizzo di residenza.
+si seleziona digital wallet
+si inserisce l’importo caricato
+si mette pagato
+LISTE (VIEW) IN EXCEL (EXPORT)
+
+ANAGRAFICA CLIENTI
+
+FILTRI:
+
+range temporale da / a (filtra sul calendario appuntamenti, trattamenti eseguiti)
+cognome
+comune di residenza
+uomo/donna/tutti
+incasso medio superiore a:
+Lista clienti con Nome, Cognome, Data di nascita, Comune residenza, num. trattamenti eseguiti (da apertura anagrafica), num. trattamenti eseguiti ultimi x giorni, totale incassato, medio incasso, ultimo trattamento eseguito (data), num. trattamenti spostati, num. trattamenti annullati, num. abbonamenti eseguiti, num. voucher acquistati
+
+ABBONAMENTI CLIENTI
+
+FILTRI:
+
+range temporale da / a (filtra sul calendario appuntamenti, trattamenti eseguiti)
+cognome
+comune di residenza
+uomo/donna/tutti
+incasso medio superiore a:
+Lista clienti avente un abbonamento (anche se non in corso) con Nome, Cognome, Data di nascita, Comune residenza, num. abbonamenti acquistati, num. trattamenti eseguiti (da apertura anagrafica), num. trattamenti eseguiti ultimi x giorni, totale incassato, medio incasso, ultimo trattamento eseguito (data), num. trattamenti spostati, num. trattamenti annullati
+
+PRODOTTI VENDUTI
+
+FILTRI:
+
+range temporale da / a (filtra sul calendario appuntamenti, trattamenti eseguiti)
+cognome
+incasso medio superiore a:
+Lista prodotti venduti con tipo prodotto, codice, costo acquisto, prezzo vendita, data ultima vendita.
