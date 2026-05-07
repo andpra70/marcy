@@ -14,6 +14,17 @@ Pagina di onboarding google.
 Utente si logga su google e viene registrato sull'app nell'anagrafica clienti.
 Gestione calendario
 
-##
+## Modello
 
-
+Uno studio ha un amministratore
+Uno studio ha n clienti
+Uno studio ha una configurazione operativa propria
+Uno studio ha uno stato applicativo proprio, ripristinato dal backend dopo il login amministratore
+Uno studio ha un calendario appuntamenti composto da slot di 30 o 60 minuti.
+Un cliente puo`prenotare un appuntamento sullo studio.
+Quello slot poi sara`occupato.
+Un cliente puo`pagare in studio o online.
+Un amministratore ha un backoffice per la gestione dello studio.
+Il backoffice ha le sezioni: dashboard, clienti, trattamenti, calendario, pagamenti, messaggi.
+La sezione trattamenti consente edit aggiunta e rimozione dei trattamenti o prodotti.
+Un cliente 

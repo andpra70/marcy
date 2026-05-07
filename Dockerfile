@@ -20,6 +20,7 @@ WORKDIR /app
 COPY --from=server-deps /app/server/node_modules ./server/node_modules
 COPY server ./server
 COPY --from=client-build /app/client/dist ./client/dist
+RUN mkdir -p /app/server/data && chown -R node:node /app/server/data
 
 EXPOSE 3001
 USER node

@@ -24,7 +24,11 @@ function BackOffice({
   googleEvents,
   googleReady,
   googleStatus,
+  adminSession,
+  adminStatus,
   notice,
+  onAdminLogout,
+  onOpenUserArea,
   pushAppointmentToGoogle,
   route,
   selectedClient,
@@ -115,10 +119,14 @@ function BackOffice({
             </button>
           ))}
         </nav>
-        <button className="google-button" onClick={connectGoogleCalendar}>
-          G
-          <span>Login Google</span>
-        </button>
+        <div className="header-actions">
+          <button type="button" onClick={onOpenUserArea}>Area utente</button>
+          <button className="google-button" onClick={connectGoogleCalendar}>
+            G
+            <span>Login Google</span>
+          </button>
+          <button className="secondary-button" type="button" onClick={onAdminLogout}>Esci</button>
+        </div>
       </header>
 
       <main>
@@ -126,7 +134,9 @@ function BackOffice({
           <div>
             <p className="eyebrow">Backoffice</p>
             <h1>{backofficeTitle}</h1>
+            <small>{adminSession?.studio.name} · {adminSession?.admin.email}</small>
           </div>
+          {adminStatus && <span className="login-chip">{adminStatus}</span>}
         </div>
 
         <div className="notice">{notice}</div>

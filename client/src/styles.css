@@ -152,6 +152,29 @@ td small {
   color: #fff;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.header-actions button,
+.front-actions button {
+  width: auto;
+  padding: 0 12px;
+}
+
+.secondary-button {
+  background: #eef2ef;
+  color: #1d2527;
+}
+
+.secondary-button:hover {
+  background: #dfe7e2;
+}
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -288,6 +311,12 @@ main {
   display: grid;
   place-items: center;
   min-height: calc(100vh - 180px);
+}
+
+.login-grid {
+  grid-template-columns: repeat(2, minmax(280px, 560px));
+  align-items: stretch;
+  gap: 18px;
 }
 
 .login-panel {
@@ -620,6 +649,9 @@ main {
 }
 
 .login-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   border: 1px solid #cad0cb;
   border-radius: 999px;
   background: #eef2ef;
@@ -1006,6 +1038,7 @@ td button {
   .page-grid,
   .client-summary,
   .flow-board,
+  .login-grid,
   .filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1036,6 +1069,7 @@ td button {
   .client-summary,
   .flow-board,
   .form-grid,
+  .login-grid,
   .filters,
   .appointment,
   .product,

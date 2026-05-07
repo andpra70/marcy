@@ -12,3 +12,16 @@ services:
       NODE_ENV: production
       PORT: 3001
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      MARCY_ADMIN_EMAIL: ${MARCY_ADMIN_EMAIL:-admin@marcy.local}
+      MARCY_ADMIN_PASSWORD: ${MARCY_ADMIN_PASSWORD:-admin}
+      MARCY_ADMIN_NAME: ${MARCY_ADMIN_NAME:-Amministratore}
+      MARCY_STUDIO_ID: ${MARCY_STUDIO_ID:-studio-marcy}
+      MARCY_STUDIO_NAME: ${MARCY_STUDIO_NAME:-Studio Marcy}
+      MARCY_STUDIO_TIMEZONE: ${MARCY_STUDIO_TIMEZONE:-Europe/Rome}
+      MARCY_GOOGLE_CALENDAR_ID: ${MARCY_GOOGLE_CALENDAR_ID:-primary}
+      MARCY_DATA_PATH: /app/server/data/studios.json
+    volumes:
+      - marcy-data:/app/server/data
+
+volumes:
+  marcy-data:

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { calendarBufferMinutes, calendarDays, subscriptions } from './appData.js';
+import { loginAdmin, saveStudioState } from './backendApi.js';
 import {
   addMinutes,
   appointmentRevenue,
@@ -24,10 +25,23 @@ import {
 import AreaUtente from './components/AreaUtente.jsx';
 import BackOffice from './components/BackOffice.jsx';
 import GoogleCalendarPanel from './components/GoogleCalendarPanel.jsx';
-import { getInitialRoute, loadAppModel, persistAppModel, updateRouteHash } from './model.js';
+import {
+  defaultAppModel,
+  getInitialRoute,
+  loadAdminSession,
+  loadAppModel,
+  persistAdminSession,
+  persistAppModel,
+  updateRouteHash,
+} from './model.js';
 
 function App() {
-  const [appModel, setAppModel] = useState(() => ({ ...loadAppModel(), route: getInitialRoute() }));
+  const [adminSession, setAdminSession] = useState(() => loadAdminSession());
+  const [appModel, setAppModel] = useState(() => {
+    const savedAdminSession = loadAdminSession();
+    return { ...loadAppModel(savedAdminSession?.studio.id), route: getInitialRoute() };
+  });
+  const [adminStatus, setAdminStatus] = useState('');
   const [googleReady, setGoogleReady] = useState(false);
   const [googleStatus, setGoogleStatus] = useState(
     isGoogleCalendarConfigured()
@@ -54,6 +68,7 @@ function App() {
   const editingClient = clients.find((client) => client.id === editingClientId);
   const editingVoucher = vouchers.find((voucher) => voucher.id === editingVoucherId);
   const isBackofficeRoute = route.startsWith('backoffice/');
+  const isAdminAuthenticated = Boolean(adminSession?.token);
 
   function updateAppModel(updater) {
     setAppModel((current) => {
@@ -94,6 +109,34 @@ function App() {
   useEffect(() => {
     persistAppModel(appModel);
   }, [appModel]);
+
+  useEffect(() => {
+    persistAdminSession(adminSession);
+  }, [adminSession]);
+
+  useEffect(() => {
+    if (!adminSession?.token || !appModel.studio?.id) return;
+
+    let cancelled = false;
+
+    async function persistBackendState() {
+      try {
+        await saveStudioState({
+          appModel,
+          studioId: appModel.studio.id,
+          token: adminSession.token,
+        });
+        if (!cancelled) setAdminStatus(`Stato ${appModel.studio.name} salvato sul backend.`);
+      } catch (error) {
+        if (!cancelled) setAdminStatus(`Salvataggio backend non riuscito: ${error.message}`);
+      }
+    }
+
+    persistBackendState();
+    return () => {
+      cancelled = true;
+    };
+  }, [adminSession?.token, appModel]);
 
   useEffect(() => {
     function handleRouteChange() {
@@ -467,7 +510,44 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
-  if (!isBackofficeRoute) {
+  async function loginBackofficeAdmin(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setAdminStatus('Login amministratore in corso.');
+
+    try {
+      const session = await loginAdmin({
+        email: String(data.get('adminEmail')).trim(),
+        password: String(data.get('adminPassword')),
+      });
+      const studioAppModel = session.appModel
+        ? { ...defaultAppModel, ...session.appModel, studio: session.studio }
+        : { ...defaultAppModel, ...loadAppModel(session.studio.id), studio: session.studio };
+
+      setAdminSession({
+        token: session.token,
+        admin: session.admin,
+        studio: session.studio,
+      });
+      updateRouteHash('backoffice/dashboard');
+      setAppModel({
+        ...studioAppModel,
+        route: 'backoffice/dashboard',
+        notice: `Accesso amministratore completato per ${session.studio.name}.`,
+      });
+      setAdminStatus(`Accesso amministratore completato per ${session.studio.name}.`);
+    } catch (error) {
+      setAdminStatus(`Login amministratore non riuscito: ${error.message}`);
+    }
+  }
+
+  function logoutBackofficeAdmin() {
+    setAdminSession(null);
+    setAdminStatus('Sessione amministratore chiusa.');
+    setRoute('login');
+  }
+
+  if (!isBackofficeRoute || !isAdminAuthenticated) {
     return (
       <div className="front-shell">
         <header className="front-topbar">
@@ -475,23 +555,27 @@ function App() {
             <span className="brand-mark">M</span>
             <div>
               <strong>Marcy</strong>
-              <small>Area cliente</small>
+              <small>{route === 'area-utente' ? 'Area cliente' : 'Accesso'}</small>
             </div>
           </div>
-          {route === 'area-utente' && (
-            <div className="front-actions">
-              <GoogleCalendarPanel
-                compact
-                ready={googleReady}
-                status={googleStatus}
-                events={googleEvents}
-                onConnect={connectGoogleCalendar}
-                onDisconnect={disconnectGoogleCalendar}
-                onSync={syncFromGoogleCalendar}
-              />
-              <button type="button" onClick={() => setRoute('login')}>Esci</button>
-            </div>
-          )}
+          <div className="front-actions">
+            <button type="button" onClick={() => setRoute('area-utente')}>Area utente</button>
+            <button type="button" onClick={() => setRoute('backoffice/dashboard')}>Backoffice</button>
+            {route === 'area-utente' && (
+              <>
+                <GoogleCalendarPanel
+                  compact
+                  ready={googleReady}
+                  status={googleStatus}
+                  events={googleEvents}
+                  onConnect={connectGoogleCalendar}
+                  onDisconnect={disconnectGoogleCalendar}
+                  onSync={syncFromGoogleCalendar}
+                />
+                <button type="button" onClick={() => setRoute('login')}>Esci</button>
+              </>
+            )}
+          </div>
         </header>
 
         <main className="front-main">
@@ -534,6 +618,8 @@ function App() {
                 updateAppModel({ selectedClientId: clientId, route: 'area-utente' });
                 updateRouteHash('area-utente');
               }}
+              onAdminLogin={loginBackofficeAdmin}
+              adminStatus={adminStatus}
             />
           )}
         </main>
@@ -557,7 +643,11 @@ function App() {
       googleEvents={googleEvents}
       googleReady={googleReady}
       googleStatus={googleStatus}
+      adminSession={adminSession}
+      adminStatus={adminStatus}
       notice={notice}
+      onAdminLogout={logoutBackofficeAdmin}
+      onOpenUserArea={() => setRoute('area-utente')}
       pushAppointmentToGoogle={pushAppointmentToGoogle}
       route={route}
       selectedClient={selectedClient}
@@ -576,11 +666,11 @@ function App() {
   );
 }
 
-function LoginPage({ clients, googleReady, googleStatus, onGoogleLogin, onLogin }) {
+function LoginPage({ adminStatus, clients, googleReady, googleStatus, onAdminLogin, onGoogleLogin, onLogin }) {
   const [clientId, setClientId] = useState(clients[0]?.id ?? '');
 
   return (
-    <section className="login-page">
+    <section className="login-page login-grid">
       <div className="panel login-panel">
         <div>
           <p className="eyebrow">Accesso cliente</p>
@@ -605,6 +695,23 @@ function LoginPage({ clients, googleReady, googleStatus, onGoogleLogin, onLogin 
           <span>Login Google</span>
         </button>
         <small>{googleStatus}</small>
+      </div>
+
+      <div className="panel login-panel">
+        <div>
+          <p className="eyebrow">Accesso amministratore</p>
+          <h1>Backoffice</h1>
+        </div>
+        <form className="form-grid" onSubmit={onAdminLogin}>
+          <label>Email amministratore
+            <input name="adminEmail" type="email" required placeholder="admin@studio.it" defaultValue="admin@marcy.local" />
+          </label>
+          <label>Password
+            <input name="adminPassword" type="password" required placeholder="Password" defaultValue="admin" />
+          </label>
+          <button type="submit">Entra nel backoffice</button>
+        </form>
+        <small>{adminStatus || 'Credenziali demo: admin@marcy.local / admin.'}</small>
       </div>
     </section>
   );
