@@ -1,0 +1,55 @@
+{
+  "studios": [
+    {
+      "id": "studio-http-test",
+      "name": "Studio HTTP Test",
+      "timezone": "Europe/Rome",
+      "calendarId": "primary",
+      "enabled": true,
+      "subscription": {
+        "status": "active",
+        "yearlyPrice": 50,
+        "validUntil": "2027-05-07"
+      },
+      "admin": {
+        "email": "admin-http-test@studio.it",
+        "password": "admin-http-test",
+        "name": "Admin HTTP Test"
+      }
+    },
+    {
+      "id": "a",
+      "name": "a",
+      "timezone": "Europe/Rome",
+      "calendarId": "primary",
+      "enabled": true,
+      "subscription": {
+        "status": "active",
+        "yearlyPrice": 50,
+        "validUntil": "2027-05-07"
+      },
+      "admin": {
+        "email": "andpra70@gmail.com",
+        "password": "a",
+        "name": "Amministratore"
+      }
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "timezone": "Europe/Rome",
+      "calendarId": "primary",
+      "enabled": true,
+      "subscription": {
+        "status": "active",
+        "yearlyPrice": 50,
+        "validUntil": "2027-05-07"
+      },
+      "admin": {
+        "email": "andpra700@gmail.com",
+        "password": "b",
+        "name": "Amministratore"
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "studioId": "studio-marcy",
+  "appModel": {
+    "route": "backoffice/dashboard",
+    "studio": {
+      "id": "studio-marcy",
+      "name": "Studio Marcy",
+      "adminEmail": "admin@marcy.local",
+      "calendarId": "primary",
+      "timezone": "Europe/Rome"
+    },
+    "clients": [],
+    "appointments": [],
+    "vouchers": [],
+    "services": [],
+    "products": [],
+    "messages": [],
+    "selectedClientId": "",
+    "notice": "Stato minimo salvato da test HTTP."
+  },
+  "updatedAt": "2026-05-07T09:06:04.290Z"
+}

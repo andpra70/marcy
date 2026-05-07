@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { backofficeNavItems, calendarBufferMinutes, products, services, subscriptions, workflowSteps } from '../appData.js';
+import { backofficeNavItems, calendarBufferMinutes, subscriptions, workflowSteps } from '../appData.js';
 import { appointmentRevenue, currency, findService, hoursUntil, isPastAppointment, isPastDateTime } from '../domain.js';
 import AppointmentModal from './AppointmentModal.jsx';
 import CalendarGrid from './CalendarGrid.jsx';
@@ -15,7 +15,11 @@ function BackOffice({
   clients,
   connectGoogleCalendar,
   createVoucher,
+  createProduct,
+  createService,
   deleteClient,
+  deleteProduct,
+  deleteService,
   deleteVoucher,
   disconnectGoogleCalendar,
   editingClient,
@@ -26,14 +30,18 @@ function BackOffice({
   googleStatus,
   adminSession,
   adminStatus,
+  messages,
   notice,
   onAdminLogout,
   onOpenUserArea,
   pushAppointmentToGoogle,
+  products,
   route,
   selectedClient,
   selectedClientId,
   sellSubscription,
+  services,
+  studio,
   setRoute,
   stats,
   syncFromGoogleCalendar,
@@ -41,6 +49,9 @@ function BackOffice({
   updateAppModel,
   updateAppointment,
   updateClient,
+  updateMessage,
+  updateProduct,
+  updateService,
   updateVoucher,
   vouchers,
 }) {
@@ -120,6 +131,7 @@ function BackOffice({
           ))}
         </nav>
         <div className="header-actions">
+          <span className="login-chip">Studio: {studio?.id ?? adminSession?.studio.id}</span>
           <button type="button" onClick={onOpenUserArea}>Area utente</button>
           <button className="google-button" onClick={connectGoogleCalendar}>
             G
@@ -145,8 +157,8 @@ function BackOffice({
           <section className="page-grid">
             <Kpi label="Appuntamenti" value={stats.appointments} detail="Calendario operativo" />
             <Kpi label="Clienti" value={stats.clients} detail="Anagrafiche create" />
-            <Kpi label="Reminder" value={stats.reminders} detail="Email + WhatsApp" />
-            <Kpi label="Buffer calendario" value={`${calendarBufferMinutes} min`} detail="Tra un massaggio e l'altro" />
+            <Kpi label="Trattamenti" value={stats.services} detail="Listino studio" />
+            <Kpi label="Incasso" value={currency(stats.revenue)} detail="Totale simulato" />
 
             <section className="wide panel">
               <div className="section-heading">
@@ -196,6 +208,7 @@ function BackOffice({
               <CalendarGrid
                 appointments={appointments}
                 clients={clients}
+                services={services}
                 googleEvents={googleEvents}
                 googleToolbar={
                   <GoogleCalendarPanel
@@ -228,6 +241,7 @@ function BackOffice({
                     closeAppointmentModal();
                   }}
                   onClose={closeAppointmentModal}
+                  services={services}
                   onSubmit={submitCalendarAppointment}
                   slot={calendarSlot}
                 />
@@ -236,7 +250,7 @@ function BackOffice({
               <div className="appointment-list compact-list">
                 {appointments.map((appointment) => {
                   const client = clients.find((item) => item.id === appointment.clientId);
-                  const service = findService(appointment.serviceId);
+                  const service = findService(appointment.serviceId, services);
                   const lateMove = hoursUntil(appointment.date, appointment.time) < 8;
                   const lateCancel = hoursUntil(appointment.date, appointment.time) < 24;
                   const isPast = isPastAppointment(appointment);
@@ -329,6 +343,49 @@ function BackOffice({
           />
         )}
 
+        {backofficeSection === 'treatments' && (
+          <section className="split">
+            <div className="panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Listino</p>
+                  <h2>Trattamenti</h2>
+                </div>
+              </div>
+              <ServiceForm onSubmit={createService} />
+              <div className="product-list">
+                {services.map((service) => (
+                  <EditableService
+                    key={service.id}
+                    onDelete={() => deleteService(service.id)}
+                    onUpdate={(values) => updateService(service.id, values)}
+                    service={service}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Prodotti</p>
+                  <h2>Prodotti e voucher a listino</h2>
+                </div>
+              </div>
+              <ProductForm onSubmit={createProduct} />
+              <div className="product-list">
+                {products.map((product) => (
+                  <EditableProduct
+                    key={product.id}
+                    onDelete={() => deleteProduct(product.id)}
+                    onUpdate={(values) => updateProduct(product.id, values)}
+                    product={product}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {backofficeSection === 'payments' && (
           <section className="split">
             <div className="panel">
@@ -403,10 +460,157 @@ function BackOffice({
         )}
 
         {backofficeSection === 'reports' && (
-          <Reports clients={clients} appointments={appointments} onExport={exportCsv} />
+          <Reports clients={clients} appointments={appointments} onExport={exportCsv} services={services} />
+        )}
+
+        {backofficeSection === 'messages' && (
+          <section className="panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Messaggi</p>
+                <h2>Regole operative</h2>
+              </div>
+            </div>
+            <div className="message-rules">
+              {messages.map((message) => (
+                <MessageRule
+                  key={message.id}
+                  message={message}
+                  onUpdate={(values) => updateMessage(message.id, values)}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </main>
     </div>
+  );
+}
+
+function ServiceForm({ onSubmit }) {
+  return (
+    <form className="form-grid compact-form" onSubmit={onSubmit}>
+      <label>Nome<input name="name" required placeholder="Massaggio standard 60 min" /></label>
+      <label>Durata
+        <select name="minutes" required defaultValue="60">
+          <option value="30">30 min</option>
+          <option value="60">60 min</option>
+        </select>
+      </label>
+      <label>Prezzo<input name="price" type="number" min="1" required placeholder="50" /></label>
+      <button type="submit">Aggiungi trattamento</button>
+    </form>
+  );
+}
+
+function EditableService({ onDelete, onUpdate, service }) {
+  return (
+    <form
+      className="product editable-row"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        onUpdate({
+          name: String(data.get('name')).trim(),
+          minutes: Number(data.get('minutes')),
+          price: Number(data.get('price')),
+        });
+      }}
+    >
+      <label>Nome<input name="name" required defaultValue={service.name} /></label>
+      <label>Durata
+        <select name="minutes" required defaultValue={service.minutes}>
+          <option value="30">30 min</option>
+          <option value="60">60 min</option>
+        </select>
+      </label>
+      <label>Prezzo<input name="price" type="number" min="1" required defaultValue={service.price} /></label>
+      <div className="row-actions compact-actions">
+        <button type="submit">Salva</button>
+        <button type="button" onClick={onDelete}>Elimina</button>
+      </div>
+    </form>
+  );
+}
+
+function ProductForm({ onSubmit }) {
+  return (
+    <form className="form-grid compact-form" onSubmit={onSubmit}>
+      <label>Tipo
+        <select name="type" required defaultValue="Prodotto">
+          <option>Prodotto</option>
+          <option>Voucher</option>
+        </select>
+      </label>
+      <label>Codice<input name="code" required placeholder="CRM-SPORT" /></label>
+      <label>Nome<input name="name" required placeholder="Crema defaticante" /></label>
+      <label>Costo<input name="cost" type="number" min="0" required defaultValue="0" /></label>
+      <label>Prezzo<input name="price" type="number" min="1" required placeholder="28" /></label>
+      <button type="submit">Aggiungi prodotto</button>
+    </form>
+  );
+}
+
+function EditableProduct({ onDelete, onUpdate, product }) {
+  return (
+    <form
+      className="product editable-row"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        onUpdate({
+          type: String(data.get('type')),
+          code: String(data.get('code')).trim(),
+          name: String(data.get('name')).trim(),
+          cost: Number(data.get('cost')),
+          price: Number(data.get('price')),
+        });
+      }}
+    >
+      <label>Tipo
+        <select name="type" required defaultValue={product.type}>
+          <option>Prodotto</option>
+          <option>Voucher</option>
+        </select>
+      </label>
+      <label>Codice<input name="code" required defaultValue={product.code} /></label>
+      <label>Nome<input name="name" required defaultValue={product.name} /></label>
+      <label>Costo<input name="cost" type="number" min="0" required defaultValue={product.cost} /></label>
+      <label>Prezzo<input name="price" type="number" min="1" required defaultValue={product.price} /></label>
+      <div className="row-actions compact-actions">
+        <button type="submit">Salva</button>
+        <button type="button" onClick={onDelete}>Elimina</button>
+      </div>
+    </form>
+  );
+}
+
+function MessageRule({ message, onUpdate }) {
+  return (
+    <form
+      className="message-rule"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        onUpdate({
+          title: String(data.get('title')).trim(),
+          channel: String(data.get('channel')).trim(),
+          trigger: String(data.get('trigger')).trim(),
+          text: String(data.get('text')).trim(),
+          enabled: Boolean(data.get('enabled')),
+        });
+      }}
+    >
+      <label>Titolo<input name="title" required defaultValue={message.title} /></label>
+      <label>Canale<input name="channel" required defaultValue={message.channel} /></label>
+      <label>Trigger<input name="trigger" required defaultValue={message.trigger} /></label>
+      <label>Testo<input name="text" required defaultValue={message.text} /></label>
+      <label className="checkbox">
+        <input name="enabled" type="checkbox" defaultChecked={message.enabled} />
+        Attivo
+      </label>
+      <button type="submit">Salva regola</button>
+    </form>
   );
 }
 
@@ -494,11 +698,11 @@ function VoucherForm({ mode = 'create', onSubmit, voucher }) {
   );
 }
 
-function Reports({ clients, appointments, onExport }) {
+function Reports({ clients, appointments, onExport, services }) {
   const [filters, setFilters] = useState({ surname: '', city: '', gender: 'Tutti', average: '' });
   const filteredClients = clients.filter((client) => {
     const clientAppointments = appointments.filter((item) => item.clientId === client.id);
-    const total = appointmentRevenue(clientAppointments);
+    const total = appointmentRevenue(clientAppointments, services);
     const average = clientAppointments.length ? total / clientAppointments.length : 0;
     return (
       client.surname.toLowerCase().includes(filters.surname.toLowerCase()) &&
@@ -552,7 +756,7 @@ function Reports({ clients, appointments, onExport }) {
           <tbody>
             {filteredClients.map((client) => {
               const rows = appointments.filter((item) => item.clientId === client.id);
-              const total = appointmentRevenue(rows);
+              const total = appointmentRevenue(rows, services);
               return (
                 <tr key={client.id}>
                   <td><strong>{client.surname} {client.name}</strong><small>{client.birthDate}</small></td>

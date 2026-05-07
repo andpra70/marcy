@@ -99,22 +99,54 @@ export function persistAdminSession(session) {
   window.sessionStorage.setItem(adminSessionStorageKey, JSON.stringify(session));
 }
 
-export function getInitialRoute() {
-  const route = window.location.hash.replace('#/', '');
-  const legacyRoutes = {
-    calendar: 'backoffice/calendar',
-    clients: 'backoffice/clients',
-    dashboard: 'backoffice/dashboard',
-    payments: 'backoffice/payments',
-    reports: 'backoffice/reports',
-    voucher: 'backoffice/voucher',
-    'user-page': 'area-utente',
-  };
-  return legacyRoutes[route] ?? (route || defaultAppModel.route);
+const legacyRoutes = {
+  calendar: 'backoffice/calendar',
+  clients: 'backoffice/clients',
+  dashboard: 'backoffice/dashboard',
+  payments: 'backoffice/payments',
+  reports: 'backoffice/reports',
+  voucher: 'backoffice/voucher',
+  'user-page': 'area-utente',
+};
+
+function isRouteFirstSegment(segment) {
+  return segment === 'login' || segment === 'area-utente' || segment === 'backoffice' || segment === 'root' || segment in legacyRoutes;
 }
 
-export function updateRouteHash(route) {
-  if (window.location.hash !== `#/${route}`) {
-    window.location.hash = `/${route}`;
+export function getHashLocation(fallbackStudioId = defaultStudio.id) {
+  const route = window.location.hash.replace('#/', '');
+  const routeParts = route.split('/').filter(Boolean);
+  const firstSegment = routeParts[0];
+
+  if (!firstSegment) {
+    return { route: defaultAppModel.route, studioId: fallbackStudioId };
+  }
+
+  if (firstSegment === 'root') {
+    return { route: 'root', studioId: fallbackStudioId };
+  }
+
+  if (isRouteFirstSegment(firstSegment)) {
+    const normalizedRoute = legacyRoutes[route] ?? route;
+    return { route: normalizedRoute || defaultAppModel.route, studioId: fallbackStudioId };
+  }
+
+  const studioId = firstSegment;
+  const studioRoute = routeParts.slice(1).join('/') || defaultAppModel.route;
+  return { route: legacyRoutes[studioRoute] ?? studioRoute, studioId };
+}
+
+export function getInitialRoute() {
+  return getHashLocation().route;
+}
+
+export function getInitialStudioId(fallbackStudioId = defaultStudio.id) {
+  return getHashLocation(fallbackStudioId).studioId;
+}
+
+export function updateRouteHash(route, studioId = defaultStudio.id) {
+  const nextHash = route === 'root' ? '#/root' : `#/${studioId || defaultStudio.id}/${route || defaultAppModel.route}`;
+  if (window.location.hash !== nextHash) {
+    window.location.hash = nextHash.replace('#', '');
   }
 }

@@ -114,5 +114,8 @@ Implementa server e client per i pagamenti da area utente
 Implementa server e client per i pagamenti da area backoffice per abbonamento
 (acquisto abbonamento un anno)
 
+## logs
+
+Aggiungi logs per ogni api server, ingresso, uscita ed errori.
 
 

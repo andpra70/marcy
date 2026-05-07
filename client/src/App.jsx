@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { calendarBufferMinutes, calendarDays, subscriptions } from './appData.js';
-import { loginAdmin, saveStudioState } from './backendApi.js';
+import { createRootStudio, loginAdmin, loginRoot, saveStudioState, updateRootStudio } from './backendApi.js';
 import {
   addMinutes,
   appointmentRevenue,
@@ -28,6 +28,7 @@ import GoogleCalendarPanel from './components/GoogleCalendarPanel.jsx';
 import {
   defaultAppModel,
   getInitialRoute,
+  getInitialStudioId,
   loadAdminSession,
   loadAppModel,
   normalizeAppModel,
@@ -40,9 +41,21 @@ function App() {
   const [adminSession, setAdminSession] = useState(() => loadAdminSession());
   const [appModel, setAppModel] = useState(() => {
     const savedAdminSession = loadAdminSession();
-    return normalizeAppModel({ ...loadAppModel(savedAdminSession?.studio.id), route: getInitialRoute() });
+    const studioId = getInitialStudioId(savedAdminSession?.studio.id);
+    const savedModel = loadAppModel(studioId);
+    return normalizeAppModel({
+      ...savedModel,
+      route: getInitialRoute(),
+      studio: {
+        ...savedModel.studio,
+        id: studioId,
+        name: savedModel.studio?.id === studioId ? savedModel.studio.name : studioId,
+      },
+    });
   });
   const [adminStatus, setAdminStatus] = useState('');
+  const [rootStatus, setRootStatus] = useState('');
+  const [rootSession, setRootSession] = useState(null);
   const [googleReady, setGoogleReady] = useState(false);
   const [googleStatus, setGoogleStatus] = useState(
     isGoogleCalendarConfigured()
@@ -58,18 +71,23 @@ function App() {
     editingClientId,
     editingVoucherId,
     googleEvents,
+    messages,
     notice,
+    products,
     route,
+    services,
     selectedUserAppointmentId,
     selectedClientId,
     vouchers,
+    cookieConsent,
   } = appModel;
 
   const selectedClient = clients.find((client) => client.id === selectedClientId) ?? clients[0] ?? null;
   const editingClient = clients.find((client) => client.id === editingClientId);
   const editingVoucher = vouchers.find((voucher) => voucher.id === editingVoucherId);
   const isBackofficeRoute = route.startsWith('backoffice/');
-  const isAdminAuthenticated = Boolean(adminSession?.token);
+  const isRootRoute = route === 'root';
+  const isAdminAuthenticated = Boolean(adminSession?.token && adminSession.studio?.id === appModel.studio?.id);
 
   function updateAppModel(updater) {
     setAppModel((current) => {
@@ -79,7 +97,7 @@ function App() {
   }
 
   function setRoute(routeId) {
-    updateRouteHash(routeId);
+    updateRouteHash(routeId, appModel.studio?.id);
     updateAppModel({ route: routeId });
   }
 
@@ -141,7 +159,24 @@ function App() {
 
   useEffect(() => {
     function handleRouteChange() {
-      updateAppModel({ route: getInitialRoute() });
+      updateAppModel((current) => {
+        const studioId = getInitialStudioId(current.studio?.id);
+        const route = getInitialRoute();
+        if (studioId === current.studio?.id) {
+          return { ...current, route };
+        }
+
+        const savedModel = loadAppModel(studioId);
+        return normalizeAppModel({
+          ...savedModel,
+          route,
+          studio: {
+            ...savedModel.studio,
+            id: studioId,
+            name: savedModel.studio?.id === studioId ? savedModel.studio.name : studioId,
+          },
+        });
+      });
     }
 
     window.addEventListener('hashchange', handleRouteChange);
@@ -150,7 +185,7 @@ function App() {
 
   const stats = useMemo(() => {
     const paidTotal = appointments.reduce((sum, appointment) => {
-      const service = findService(appointment.serviceId);
+      const service = findService(appointment.serviceId, services);
       return appointment.status === 'Pagato' || appointment.payment !== 'Da incassare' ? sum + (service?.price ?? 0) : sum;
     }, 0);
 
@@ -159,8 +194,9 @@ function App() {
       clients: clients.length,
       reminders: appointments.filter((item) => item.status === 'Confermato').length,
       revenue: paidTotal,
+      services: services.length,
     };
-  }, [appointments, clients]);
+  }, [appointments, clients, services]);
 
   function addClient(event) {
     event.preventDefault();
@@ -190,6 +226,22 @@ function App() {
     }));
   }
 
+  function updateUserProfile(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const clientId = String(data.get('clientId'));
+    const currentClient = clients.find((client) => client.id === clientId);
+    if (!currentClient) return;
+
+    const updatedClient = updateClientFromForm(currentClient, data);
+    updateAppModel((current) => ({
+      ...current,
+      clients: current.clients.map((client) => (client.id === clientId ? updatedClient : client)),
+      selectedClientId: clientId,
+      notice: 'Profilo aggiornato.',
+    }));
+  }
+
   function deleteClient(clientId) {
     const nextClients = clients.filter((client) => client.id !== clientId);
     updateAppModel((current) => ({
@@ -212,7 +264,7 @@ function App() {
       selectedClientId: client.id,
       notice: `Registrazione area utente completata: creata anagrafica ${client.id}.`,
     }));
-    updateRouteHash('area-utente');
+    updateRouteHash('area-utente', appModel.studio?.id);
   }
 
   function addAppointment(event) {
@@ -304,7 +356,7 @@ function App() {
       return;
     }
     const client = clients.find((item) => item.id === appointment.clientId);
-    const service = findService(appointment.serviceId);
+    const service = findService(appointment.serviceId, services);
     const start = new Date(`${appointment.date}T${appointment.time}:00`);
     const end = addMinutes(start, (service?.minutes ?? 60) + calendarBufferMinutes);
     await insertGoogleCalendarEvent({
@@ -348,6 +400,87 @@ function App() {
         selectedUserAppointmentId: action === 'cancel' ? null : current.selectedUserAppointmentId,
       };
     });
+  }
+
+  function createService(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const service = {
+      id: makeId('TRT'),
+      name: String(data.get('name')).trim(),
+      minutes: Number(data.get('minutes')),
+      price: Number(data.get('price')),
+    };
+    updateAppModel((current) => ({
+      ...current,
+      services: [service, ...current.services],
+      notice: `Trattamento ${service.name} creato.`,
+    }));
+    event.currentTarget.reset();
+  }
+
+  function updateService(serviceId, values) {
+    updateAppModel((current) => ({
+      ...current,
+      services: current.services.map((service) => (service.id === serviceId ? { ...service, ...values } : service)),
+      notice: 'Trattamento aggiornato.',
+    }));
+  }
+
+  function deleteService(serviceId) {
+    const isUsed = appointments.some((appointment) => appointment.serviceId === serviceId);
+    if (isUsed) {
+      updateAppModel({ notice: 'Non puoi eliminare un trattamento collegato ad appuntamenti esistenti.' });
+      return;
+    }
+    updateAppModel((current) => ({
+      ...current,
+      services: current.services.filter((service) => service.id !== serviceId),
+      notice: 'Trattamento eliminato.',
+    }));
+  }
+
+  function createProduct(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const product = {
+      id: makeId('PRD'),
+      type: String(data.get('type')),
+      code: String(data.get('code')).trim(),
+      name: String(data.get('name')).trim(),
+      cost: Number(data.get('cost')),
+      price: Number(data.get('price')),
+    };
+    updateAppModel((current) => ({
+      ...current,
+      products: [product, ...current.products],
+      notice: `Prodotto ${product.name} creato.`,
+    }));
+    event.currentTarget.reset();
+  }
+
+  function updateProduct(productId, values) {
+    updateAppModel((current) => ({
+      ...current,
+      products: current.products.map((product) => (product.id === productId ? { ...product, ...values } : product)),
+      notice: 'Prodotto aggiornato.',
+    }));
+  }
+
+  function deleteProduct(productId) {
+    updateAppModel((current) => ({
+      ...current,
+      products: current.products.filter((product) => product.id !== productId),
+      notice: 'Prodotto eliminato.',
+    }));
+  }
+
+  function updateMessage(messageId, values) {
+    updateAppModel((current) => ({
+      ...current,
+      messages: current.messages.map((message) => (message.id === messageId ? { ...message, ...values } : message)),
+      notice: 'Regola messaggio aggiornata.',
+    }));
   }
 
   function updateUserAppointment(appointmentId, values) {
@@ -461,6 +594,7 @@ function App() {
 
   function topUpWallet(event) {
     event.preventDefault();
+    if (!selectedClient) return;
     const amount = Number(new FormData(event.currentTarget).get('amount'));
     updateAppModel((current) => ({
       ...current,
@@ -481,7 +615,7 @@ function App() {
   function reportRows(type) {
     return clients.map((client) => {
       const clientAppointments = appointments.filter((item) => item.clientId === client.id);
-      const revenue = appointmentRevenue(clientAppointments);
+      const revenue = appointmentRevenue(clientAppointments, services);
       return {
         id: client.id,
         nome: `${client.name} ${client.surname}`,
@@ -502,6 +636,10 @@ function App() {
 
   function exportCsv(type) {
     const rows = reportRows(type);
+    if (!rows.length) {
+      updateAppModel({ notice: 'Nessun dato da esportare.' });
+      return;
+    }
     const headers = Object.keys(rows[0]);
     const csv = [headers.join(','), ...rows.map((row) => headers.map((key) => JSON.stringify(row[key])).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -522,6 +660,7 @@ function App() {
       const session = await loginAdmin({
         email: String(data.get('adminEmail')).trim(),
         password: String(data.get('adminPassword')),
+        studioId: appModel.studio?.id,
       });
       const studioAppModel = session.appModel
         ? normalizeAppModel({ ...defaultAppModel, ...session.appModel, studio: session.studio })
@@ -532,7 +671,7 @@ function App() {
         admin: session.admin,
         studio: session.studio,
       });
-      updateRouteHash('backoffice/dashboard');
+      updateRouteHash('backoffice/dashboard', session.studio.id);
       setAppModel({
         ...studioAppModel,
         route: 'backoffice/dashboard',
@@ -550,10 +689,86 @@ function App() {
     setRoute('login');
   }
 
+  async function loginRootAdmin(event) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setRootStatus('Login root in corso.');
+
+    try {
+      const session = await loginRoot({
+        username: String(data.get('username')).trim(),
+        password: String(data.get('password')),
+      });
+      setRootSession(session);
+      setRootStatus('Accesso root completato.');
+    } catch (error) {
+      setRootStatus(`Login root non riuscito: ${error.message}`);
+    }
+  }
+
+  async function createStudioFromRoot(event) {
+    event.preventDefault();
+    if (!rootSession?.token) return;
+
+    const data = new FormData(event.currentTarget);
+    setRootStatus('Creazione studio in corso.');
+
+    try {
+      const result = await createRootStudio({
+        token: rootSession.token,
+        studio: {
+          id: String(data.get('id')).trim(),
+          name: String(data.get('name')).trim(),
+          adminEmail: String(data.get('adminEmail')).trim(),
+          adminPassword: String(data.get('adminPassword')),
+          validUntil: String(data.get('validUntil')),
+          yearlyPrice: Number(data.get('yearlyPrice')),
+        },
+      });
+      setRootSession((current) => ({ ...current, studios: result.studios }));
+      setRootStatus('Studio creato.');
+      event.currentTarget.reset();
+    } catch (error) {
+      setRootStatus(`Creazione studio non riuscita: ${error.message}`);
+    }
+  }
+
+  async function toggleStudioFromRoot(studio) {
+    if (!rootSession?.token) return;
+
+    try {
+      const result = await updateRootStudio({
+        studioId: studio.id,
+        token: rootSession.token,
+        values: { enabled: !studio.enabled },
+      });
+      setRootSession((current) => ({ ...current, studios: result.studios }));
+      setRootStatus(studio.enabled ? 'Studio disabilitato.' : 'Studio abilitato.');
+    } catch (error) {
+      setRootStatus(`Aggiornamento studio non riuscito: ${error.message}`);
+    }
+  }
+
+  if (isRootRoute) {
+    return (
+      <AppFrame appModel={appModel} onRoute={setRoute}>
+        <RootPage
+          onCreateStudio={createStudioFromRoot}
+          onLogin={loginRootAdmin}
+          onToggleStudio={toggleStudioFromRoot}
+          rootSession={rootSession}
+          rootStatus={rootStatus}
+        />
+        <CookieConsent consent={cookieConsent} onConsent={(value) => updateAppModel({ cookieConsent: value })} />
+      </AppFrame>
+    );
+  }
+
   if (!isBackofficeRoute || !isAdminAuthenticated) {
     return (
-      <div className="front-shell">
-        <header className="front-topbar">
+      <AppFrame appModel={appModel} onRoute={setRoute}>
+        <div className="front-shell">
+          <header className="front-topbar">
           <div className="brand front-brand">
             <span className="brand-mark">M</span>
             <div>
@@ -562,8 +777,10 @@ function App() {
             </div>
           </div>
           <div className="front-actions">
+            <span className="login-chip">Studio: {appModel.studio?.id}</span>
             <button type="button" onClick={() => setRoute('area-utente')}>Area utente</button>
             <button type="button" onClick={() => setRoute('backoffice/dashboard')}>Backoffice</button>
+            <button type="button" onClick={() => setRoute('root')}>Root</button>
             {route === 'area-utente' && (
               <>
                 <GoogleCalendarPanel
@@ -579,9 +796,9 @@ function App() {
               </>
             )}
           </div>
-        </header>
+          </header>
 
-        <main className="front-main">
+          <main className="front-main">
           <div className="notice">{notice}</div>
 
           {route === 'area-utente' ? (
@@ -598,6 +815,7 @@ function App() {
               onConnectGoogle={connectGoogleCalendar}
               onDisconnectGoogle={disconnectGoogleCalendar}
               onCloseAppointment={() => updateAppModel({ selectedUserAppointmentId: null })}
+              onUpdateProfile={updateUserProfile}
               onRegister={registerFromUserArea}
               onCloseBooking={() => updateAppModel({ bookingSlot: null })}
               onSelectAppointment={(appointmentId) => updateAppModel({ selectedUserAppointmentId: appointmentId })}
@@ -605,6 +823,7 @@ function App() {
               onSyncGoogle={syncFromGoogleCalendar}
               onUpdateAppointment={updateUserAppointment}
               selectedAppointmentId={selectedUserAppointmentId}
+              services={services}
               vouchers={vouchers}
             />
           ) : (
@@ -615,57 +834,156 @@ function App() {
               onGoogleLogin={() => {
                 connectGoogleCalendar();
                 updateAppModel({ selectedClientId, route: 'area-utente' });
-                updateRouteHash('area-utente');
+                updateRouteHash('area-utente', appModel.studio?.id);
               }}
               onLogin={(clientId) => {
                 updateAppModel({ selectedClientId: clientId, route: 'area-utente' });
-                updateRouteHash('area-utente');
+                updateRouteHash('area-utente', appModel.studio?.id);
               }}
               onAdminLogin={loginBackofficeAdmin}
               adminStatus={adminStatus}
             />
           )}
-        </main>
-      </div>
+          </main>
+        </div>
+        <CookieConsent consent={cookieConsent} onConsent={(value) => updateAppModel({ cookieConsent: value })} />
+      </AppFrame>
     );
   }
 
   return (
-    <BackOffice
-      addClient={addClient}
-      appointments={appointments}
-      clients={clients}
-      connectGoogleCalendar={connectGoogleCalendar}
-      createVoucher={createVoucher}
-      deleteClient={deleteClient}
-      deleteVoucher={deleteVoucher}
-      disconnectGoogleCalendar={disconnectGoogleCalendar}
-      editingClient={editingClient}
-      editingVoucher={editingVoucher}
-      exportCsv={exportCsv}
-      googleEvents={googleEvents}
-      googleReady={googleReady}
-      googleStatus={googleStatus}
-      adminSession={adminSession}
-      adminStatus={adminStatus}
-      notice={notice}
-      onAdminLogout={logoutBackofficeAdmin}
-      onOpenUserArea={() => setRoute('area-utente')}
-      pushAppointmentToGoogle={pushAppointmentToGoogle}
-      route={route}
-      selectedClient={selectedClient}
-      selectedClientId={selectedClientId}
-      sellSubscription={sellSubscription}
-      setRoute={setRoute}
-      stats={stats}
-      syncFromGoogleCalendar={syncFromGoogleCalendar}
-      topUpWallet={topUpWallet}
-      updateAppModel={updateAppModel}
-      updateAppointment={updateAppointment}
-      updateClient={updateClient}
-      updateVoucher={updateVoucher}
-      vouchers={vouchers}
-    />
+    <AppFrame appModel={appModel} onRoute={setRoute}>
+      <BackOffice
+        addClient={addClient}
+        appointments={appointments}
+        clients={clients}
+        connectGoogleCalendar={connectGoogleCalendar}
+        createVoucher={createVoucher}
+        deleteClient={deleteClient}
+        deleteVoucher={deleteVoucher}
+        disconnectGoogleCalendar={disconnectGoogleCalendar}
+        editingClient={editingClient}
+        editingVoucher={editingVoucher}
+        exportCsv={exportCsv}
+        googleEvents={googleEvents}
+        googleReady={googleReady}
+        googleStatus={googleStatus}
+        adminSession={adminSession}
+        adminStatus={adminStatus}
+        createProduct={createProduct}
+        createService={createService}
+        deleteProduct={deleteProduct}
+        deleteService={deleteService}
+        messages={messages}
+        notice={notice}
+        onAdminLogout={logoutBackofficeAdmin}
+        onOpenUserArea={() => setRoute('area-utente')}
+        products={products}
+        pushAppointmentToGoogle={pushAppointmentToGoogle}
+        route={route}
+        selectedClient={selectedClient}
+        selectedClientId={selectedClientId}
+        sellSubscription={sellSubscription}
+        services={services}
+        studio={appModel.studio}
+        setRoute={setRoute}
+        stats={stats}
+        syncFromGoogleCalendar={syncFromGoogleCalendar}
+        topUpWallet={topUpWallet}
+        updateAppModel={updateAppModel}
+        updateAppointment={updateAppointment}
+        updateClient={updateClient}
+        updateMessage={updateMessage}
+        updateProduct={updateProduct}
+        updateService={updateService}
+        updateVoucher={updateVoucher}
+        vouchers={vouchers}
+      />
+      <CookieConsent consent={cookieConsent} onConsent={(value) => updateAppModel({ cookieConsent: value })} />
+    </AppFrame>
+  );
+}
+
+function AppFrame({ appModel, children }) {
+  const studio = appModel.studio;
+
+  return (
+    <>
+      {children}
+      <footer className="app-footer">
+        <strong>{studio.name}</strong>
+        <span>{studio.address}</span>
+        <span>{studio.phone}</span>
+        <span>{studio.email}</span>
+      </footer>
+    </>
+  );
+}
+
+function CookieConsent({ consent, onConsent }) {
+  if (consent) return null;
+
+  return (
+    <section className="cookie-banner" aria-label="Informativa cookie e privacy">
+      <div>
+        <strong>Privacy e cookie</strong>
+        <p>Usiamo storage tecnico per login, preferenze, stato studio e integrazioni richieste. I dati sanitari e di contatto sono trattati solo per la gestione dello studio.</p>
+      </div>
+      <div className="front-actions">
+        <button type="button" onClick={() => onConsent('essential')}>Solo necessari</button>
+        <button type="button" onClick={() => onConsent('accepted')}>Accetta</button>
+      </div>
+    </section>
+  );
+}
+
+function RootPage({ onCreateStudio, onLogin, onToggleStudio, rootSession, rootStatus }) {
+  return (
+    <main className="front-main">
+      <section className="login-page">
+        <div className="panel login-panel">
+          <div>
+            <p className="eyebrow">Root</p>
+            <h1>Gestione studi</h1>
+          </div>
+          {!rootSession ? (
+            <form className="form-grid" onSubmit={onLogin}>
+              <label>Utente<input name="username" required defaultValue="root" /></label>
+              <label>Password<input name="password" type="password" required defaultValue="password" /></label>
+              <button type="submit">Entra come root</button>
+            </form>
+          ) : (
+            <div className="stack">
+              <form className="form-grid" onSubmit={onCreateStudio}>
+                <label>Id studio<input name="id" required placeholder="studio-milano" /></label>
+                <label>Nome studio<input name="name" required placeholder="Studio Milano" /></label>
+                <label>Email admin<input name="adminEmail" type="email" required placeholder="admin@studio.it" /></label>
+                <label>Password admin<input name="adminPassword" type="password" required placeholder="Password" /></label>
+                <label>Valido fino al<input name="validUntil" type="date" required defaultValue="2027-05-07" /></label>
+                <label>Prezzo annuo<input name="yearlyPrice" type="number" min="1" required defaultValue="50" /></label>
+                <button type="submit">Crea studio</button>
+              </form>
+              {rootSession.studios.map((studio) => (
+                <article className="product" key={studio.id}>
+                  <div>
+                    <strong>{studio.name}</strong>
+                    <span>{studio.id} · {studio.enabled ? 'abilitato' : 'disabilitato'}</span>
+                    <small>Abbonamento {studio.subscription.status} fino a {studio.subscription.validUntil}</small>
+                  </div>
+                  <div className="stack-tight">
+                    <strong>{currency(studio.subscription.yearlyPrice)} / anno</strong>
+                    <button type="button" onClick={() => onToggleStudio(studio)}>
+                      {studio.enabled ? 'Disabilita' : 'Abilita'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          <small>{rootStatus || 'Credenziali demo: root / password.'}</small>
+        </div>
+      </section>
+    </main>
   );
 }
 

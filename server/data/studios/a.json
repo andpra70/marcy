@@ -1,0 +1,216 @@
+{
+  "studioId": "a",
+  "appModel": {
+    "route": "area-utente",
+    "studio": {
+      "id": "a",
+      "name": "a",
+      "adminEmail": "andpra70@gmail.com",
+      "calendarId": "primary",
+      "timezone": "Europe/Rome"
+    },
+    "clients": [
+      {
+        "id": "CLI-2026-H0VL",
+        "name": "b",
+        "surname": "b",
+        "email": "andpra70@gmail.com",
+        "phone": "+393394507484",
+        "fiscalCode": "VRDSRA78E51F205M",
+        "address": "Via mezzofanti 39, 39",
+        "city": "Bologna",
+        "birthDate": "",
+        "gender": "Donna",
+        "subscription": {
+          "name": "Nessun abbonamento",
+          "remaining": 0,
+          "purchased": 0
+        },
+        "wallet": 0,
+        "prepaid": {
+          "balance": 0,
+          "validUntil": "-"
+        },
+        "vouchersBought": 0,
+        "notes": "",
+        "pathologies": "",
+        "photos": 0
+      },
+      {
+        "id": "CLI-2026-001",
+        "name": "Giulia",
+        "surname": "Rossi",
+        "email": "giulia.rossi@example.com",
+        "phone": "+39 333 123 4567",
+        "fiscalCode": "RSSGLI90A41F205X",
+        "address": "Via Torino 18, Milano",
+        "city": "Milano",
+        "birthDate": "1990-01-01",
+        "gender": "Donna",
+        "subscription": {
+          "name": "Abbonamento 5 massaggi",
+          "remaining": 2,
+          "purchased": 1
+        },
+        "wallet": 120,
+        "prepaid": {
+          "balance": 80,
+          "validUntil": "2027-03-15"
+        },
+        "vouchersBought": 1,
+        "notes": "Preferisce slot mattutine.",
+        "pathologies": "Cervicalgia ricorrente.",
+        "photos": 2
+      }
+    ],
+    "appointments": [
+      {
+        "id": "APP-RCXO",
+        "clientId": "CLI-2026-H0VL",
+        "date": "2026-05-07",
+        "time": "09:30",
+        "serviceId": "standard60",
+        "status": "Confermato",
+        "payment": "In studio",
+        "moved": 0,
+        "cancelled": 0
+      },
+      {
+        "id": "APP-B3L4",
+        "clientId": "CLI-2026-H0VL",
+        "date": "2026-05-07",
+        "time": "09:00",
+        "serviceId": "standard60",
+        "status": "Spostato",
+        "payment": "In studio",
+        "moved": 0,
+        "cancelled": 0
+      },
+      {
+        "id": "APP-KHRV",
+        "clientId": "CLI-2026-001",
+        "date": "2026-05-08",
+        "time": "11:00",
+        "serviceId": "standard60",
+        "payment": "In studio",
+        "status": "Confermato",
+        "moved": 0,
+        "cancelled": 0
+      },
+      {
+        "id": "APP-EAJN",
+        "clientId": "CLI-2026-001",
+        "date": "2026-05-06",
+        "time": "09:00",
+        "serviceId": "standard60",
+        "payment": "In studio",
+        "status": "Confermato",
+        "moved": 0,
+        "cancelled": 0
+      },
+      {
+        "id": "APP-101",
+        "clientId": "CLI-2026-001",
+        "date": "2026-05-07",
+        "time": "10:00",
+        "serviceId": "standard60",
+        "status": "Confermato",
+        "payment": "Abbonamento",
+        "moved": 1,
+        "cancelled": 0
+      }
+    ],
+    "vouchers": [
+      {
+        "id": "VCH-8X2A",
+        "buyerId": "CLI-2026-001",
+        "recipient": "Laura Neri",
+        "email": "laura.neri@example.com",
+        "phone": "+39 333 111 2222",
+        "sessions": 1,
+        "status": "Inviato"
+      }
+    ],
+    "services": [
+      {
+        "id": "standard60",
+        "name": "Massaggio standard 60 min",
+        "price": 50,
+        "minutes": 60
+      },
+      {
+        "id": "standard30",
+        "name": "Massaggio standard 30 min",
+        "price": 30,
+        "minutes": 30
+      },
+      {
+        "id": "extended75",
+        "name": "Trattamento esteso 75 min",
+        "price": 65,
+        "minutes": 75
+      }
+    ],
+    "products": [
+      {
+        "id": "cream",
+        "type": "Prodotto",
+        "code": "CRM-SPORT",
+        "name": "Crema defaticante",
+        "cost": 12,
+        "price": 28
+      },
+      {
+        "id": "band",
+        "type": "Prodotto",
+        "code": "ELB-01",
+        "name": "Elastico terapeutico",
+        "cost": 8,
+        "price": 18
+      },
+      {
+        "id": "gift1",
+        "type": "Voucher",
+        "code": "GFT-001",
+        "name": "Voucher gift 1 massaggio",
+        "cost": 0,
+        "price": 50
+      }
+    ],
+    "messages": [
+      {
+        "id": "MSG-REMINDER",
+        "title": "Reminder appuntamento",
+        "channel": "Email + WhatsApp",
+        "trigger": "48 ore prima",
+        "text": "Promemoria appuntamento con link modifica/disdetta e cancellation policy.",
+        "enabled": true
+      },
+      {
+        "id": "MSG-LAST-SUBSCRIPTION",
+        "title": "Ultimo trattamento abbonamento",
+        "channel": "Email",
+        "trigger": "Invio immediato e recall",
+        "text": "Avviso ultimo trattamento in abbonamento e proposta rinnovo.",
+        "enabled": true
+      },
+      {
+        "id": "MSG-RENEWAL-OFFER",
+        "title": "Offerta rinnovo",
+        "channel": "Email",
+        "trigger": "Fine abbonamento",
+        "text": "Buono regalo 10% su prepagata per rinnovo entro la data configurata.",
+        "enabled": true
+      }
+    ],
+    "selectedClientId": "CLI-2026-H0VL",
+    "editingClientId": null,
+    "editingVoucherId": null,
+    "bookingSlot": null,
+    "selectedUserAppointmentId": null,
+    "notice": "Appuntamento APP-B3L4 aggiornato.",
+    "googleEvents": [],
+    "cookieConsent": "accepted"
+  },
+  "updatedAt": "2026-05-07T09:58:08.830Z"
+}

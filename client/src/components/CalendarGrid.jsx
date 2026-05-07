@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { calendarSlots, today } from '../appData.js';
 import { findService, formatDay, formatMonthLabel, isPastDateTime, weekDays } from '../domain.js';
 
+const maxEditableMonths = 2;
+
 function CalendarGrid({
   appointments,
   clients,
@@ -19,6 +21,10 @@ function CalendarGrid({
 }) {
   const [anchorDate, setAnchorDate] = useState(today);
   const calendarDays = useMemo(() => weekDays(anchorDate), [anchorDate]);
+  const maxEditableDate = useMemo(
+    () => new Date(today.getFullYear(), today.getMonth() + maxEditableMonths, today.getDate(), 23, 59, 59),
+    [],
+  );
 
   function moveMonth(delta) {
     setAnchorDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, current.getDate()));
@@ -77,6 +83,7 @@ function CalendarGrid({
               slot={slot}
               userMode={userMode}
               calendarDays={calendarDays}
+              maxEditableDate={maxEditableDate}
             />
           ))}
         </div>
@@ -99,6 +106,7 @@ function CalendarRow({
   services,
   userMode,
   calendarDays,
+  maxEditableDate,
 }) {
   return (
     <>
@@ -114,12 +122,13 @@ function CalendarRow({
           ? dayAppointments.filter((appointment) => appointment.clientId !== currentClientId)
           : [];
         const isPastSlot = isPastDateTime(day, slot);
-        const canSelectSlot = !isPastSlot && !isBusy && onSlotSelect;
+        const isOverMaxDate = new Date(`${day}T${slot}:00`).getTime() > maxEditableDate.getTime();
+        const canSelectSlot = !isPastSlot && !isOverMaxDate && !isBusy && onSlotSelect;
         const slotClassName = [
           'calendar-slot',
           canSelectSlot ? 'selectable-slot' : '',
           isBusy ? 'busy' : '',
-          isPastSlot ? 'past-slot' : '',
+          isPastSlot || isOverMaxDate ? 'past-slot' : '',
         ].filter(Boolean).join(' ');
 
         return (
@@ -147,17 +156,18 @@ function CalendarRow({
               const client = clients.find((item) => item.id === appointment.clientId);
               const service = findService(appointment.serviceId, services);
               const isPastAppointment = isPastDateTime(appointment.date, appointment.time);
+              const isLockedAppointment = isPastAppointment || isOverMaxDate;
               return (
                 <article className={`slot-card ${appointmentStatusClass(appointment.status)}`} key={appointment.id}>
                   <button
                     className="slot-card-button"
-                    disabled={isPastAppointment}
+                    disabled={isLockedAppointment}
                     onClick={(event) => {
                       event.stopPropagation();
-                      if (isPastAppointment) return;
+                      if (isLockedAppointment) return;
                       onAppointmentSelect?.(appointment.id);
                     }}
-                    title={isPastAppointment ? 'Appuntamento passato: modifiche non consentite' : 'Apri appuntamento'}
+                    title={isLockedAppointment ? 'Appuntamento fuori finestra modificabile' : 'Apri appuntamento'}
                     type="button"
                   >
                     <strong>{client?.surname} {client?.name}</strong>
@@ -166,8 +176,8 @@ function CalendarRow({
                   </button>
                   {!readOnly && (
                     <div className="slot-actions">
-                      <button disabled={isPastAppointment} type="button" onClick={() => onAction(appointment.id, 'approve')}>Ok</button>
-                      <button disabled={isPastAppointment} type="button" onClick={() => onPushGoogle(appointment.id)}>GCal</button>
+                      <button disabled={isLockedAppointment} type="button" onClick={() => onAction(appointment.id, 'approve')}>Ok</button>
+                      <button disabled={isLockedAppointment} type="button" onClick={() => onPushGoogle(appointment.id)}>GCal</button>
                     </div>
                   )}
                 </article>

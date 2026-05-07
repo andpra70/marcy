@@ -10,6 +10,7 @@ const userSections = [
   { id: 'calendar', label: 'Calendario' },
   { id: 'treatments', label: 'Trattamenti' },
   { id: 'messages', label: 'Messaggi' },
+  { id: 'profile', label: 'Profilo' },
 ];
 
 function AreaUtente({
@@ -27,11 +28,13 @@ function AreaUtente({
   onConnectGoogle,
   onDisconnectGoogle,
   onRegister,
+  onUpdateProfile,
   onSelectAppointment,
   onSelectSlot,
   onSyncGoogle,
   onUpdateAppointment,
   selectedAppointmentId,
+  services,
   vouchers,
 }) {
   const [activeSection, setActiveSection] = useState('overview');
@@ -109,6 +112,7 @@ function AreaUtente({
             onPushGoogle={() => {}}
             onSlotSelect={onSelectSlot}
             readOnly
+            services={services}
             userMode
           />
           {bookingSlot && (
@@ -118,6 +122,7 @@ function AreaUtente({
               mode="create"
               onClose={onCloseBooking}
               onSubmit={onBookAppointment}
+              services={services}
               slot={bookingSlot}
             />
           )}
@@ -126,6 +131,7 @@ function AreaUtente({
               appointment={selectedAppointment}
               onCancel={() => onCancelAppointment(selectedAppointment.id)}
               onClose={onCloseAppointment}
+              services={services}
               onSubmit={(event) => {
                 event.preventDefault();
                 const data = new FormData(event.currentTarget);
@@ -146,7 +152,7 @@ function AreaUtente({
           <h2>Trattamenti eseguiti</h2>
           <div className="timeline">
             {clientAppointments.map((appointment) => {
-              const service = findService(appointment.serviceId);
+              const service = findService(appointment.serviceId, services);
               return (
                 <article key={appointment.id}>
                   <strong>{appointment.date}</strong>
@@ -168,6 +174,38 @@ function AreaUtente({
             <p>Ultimo trattamento: {lastAppointment?.date ?? 'non disponibile'}</p>
           </div>
           <button onClick={() => window.alert('Simulazione: apertura ricarica prepagata online')}>Carica prepagata</button>
+        </section>
+      )}
+
+      {activeSection === 'profile' && (
+        <section className="panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Profilo</p>
+              <h2>Dati personali</h2>
+            </div>
+          </div>
+          <form className="form-grid" onSubmit={onUpdateProfile}>
+            <input name="clientId" type="hidden" value={client.id} />
+            <label>Nome<input name="name" required defaultValue={client.name} /></label>
+            <label>Cognome<input name="surname" required defaultValue={client.surname} /></label>
+            <label>Codice fiscale<input name="fiscalCode" defaultValue={client.fiscalCode} /></label>
+            <label>Indirizzo<input name="address" defaultValue={client.address} /></label>
+            <label>Comune<input name="city" defaultValue={client.city} /></label>
+            <label>Cellulare<input name="phone" required defaultValue={client.phone} /></label>
+            <label>Email<input name="email" type="email" required defaultValue={client.email} /></label>
+            <label>Data di nascita<input name="birthDate" type="date" defaultValue={client.birthDate} /></label>
+            <label>Genere
+              <select name="gender" required defaultValue={client.gender}>
+                <option>Donna</option>
+                <option>Uomo</option>
+                <option>Altro</option>
+              </select>
+            </label>
+            <label>Note generali<input name="notes" defaultValue={client.notes} /></label>
+            <label>Fisiopatologie<input name="pathologies" defaultValue={client.pathologies} /></label>
+            <button type="submit">Salva profilo</button>
+          </form>
         </section>
       )}
     </section>

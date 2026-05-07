@@ -1,0 +1,92 @@
+{
+  "studioId": "studio-http-test",
+  "appModel": {
+    "route": "backoffice/dashboard",
+    "studio": {
+      "id": "studio-http-test",
+      "name": "Studio HTTP Test",
+      "adminEmail": "admin-http-test@studio.it",
+      "calendarId": "primary",
+      "timezone": "Europe/Rome"
+    },
+    "clients": [
+      {
+        "id": "CLI-HTTP-001",
+        "name": "Cliente",
+        "surname": "HTTP",
+        "email": "cliente-http@example.com",
+        "phone": "+39 333 123 4567",
+        "fiscalCode": "HTTPCL80A01F205X",
+        "address": "Via Cliente 2, Milano",
+        "city": "Milano",
+        "birthDate": "1980-01-01",
+        "gender": "Altro",
+        "subscription": {
+          "name": "Nessun abbonamento",
+          "remaining": 0,
+          "purchased": 0
+        },
+        "wallet": 0,
+        "prepaid": {
+          "balance": 0,
+          "validUntil": "-"
+        },
+        "vouchersBought": 0,
+        "notes": "Cliente creato da test HTTP.",
+        "pathologies": "",
+        "photos": 0
+      }
+    ],
+    "appointments": [
+      {
+        "id": "APP-HTTP-001",
+        "clientId": "CLI-HTTP-001",
+        "date": "2026-05-08",
+        "time": "10:00",
+        "serviceId": "standard60",
+        "status": "Da approvare",
+        "payment": "In studio",
+        "moved": 0,
+        "cancelled": 0
+      }
+    ],
+    "vouchers": [],
+    "services": [
+      {
+        "id": "standard60",
+        "name": "Massaggio standard 60 min",
+        "price": 50,
+        "minutes": 60
+      }
+    ],
+    "products": [
+      {
+        "id": "gift1",
+        "type": "Voucher",
+        "code": "GFT-001",
+        "name": "Voucher gift 1 massaggio",
+        "cost": 0,
+        "price": 50
+      }
+    ],
+    "messages": [
+      {
+        "id": "MSG-HTTP-001",
+        "title": "Reminder test",
+        "channel": "Email",
+        "trigger": "48 ore prima",
+        "text": "Promemoria creato da test HTTP.",
+        "enabled": true
+      }
+    ],
+    "selectedClientId": "CLI-HTTP-001",
+    "editingClientId": null,
+    "editingVoucherId": null,
+    "bookingSlot": null,
+    "selectedUserAppointmentId": null,
+    "notice": "Stato salvato da test HTTP.",
+    "googleEvents": [],
+    "cookieConsent": "essential"
+  },
+  "updatedAt": "2026-05-07T09:10:06.849Z"
+}

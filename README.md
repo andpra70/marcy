@@ -25,6 +25,13 @@ Credenziali backoffice demo:
 
 La top bar consente di passare tra `Area utente` e `Backoffice`. Il backoffice richiede il login amministratore sul backend.
 
+Credenziali root demo:
+
+- utente: `root`
+- password: `password`
+
+Root consente di elencare gli studi configurati, creare nuovi studi e abilitarli/disabilitarli.
+
 ## Build Client
 
 ```bash
@@ -75,11 +82,14 @@ Variabili configurabili:
 - `MARCY_ADMIN_EMAIL`, email amministratore studio
 - `MARCY_ADMIN_PASSWORD`, password amministratore studio
 - `MARCY_ADMIN_NAME`, nome visualizzato amministratore
+- `MARCY_ROOT_USER`, utente superadmin
+- `MARCY_ROOT_PASSWORD`, password superadmin
 - `MARCY_STUDIO_ID`, identificativo studio
 - `MARCY_STUDIO_NAME`, nome studio
 - `MARCY_STUDIO_TIMEZONE`, timezone studio
 - `MARCY_GOOGLE_CALENDAR_ID`, calendario Google associato allo studio
 - `MARCY_DATA_PATH`, file JSON server per persistere lo stato degli studi
+- `MARCY_STUDIO_DATA_DIR`, directory con un file JSON per ogni stato studio
 
 ## Environment
 
